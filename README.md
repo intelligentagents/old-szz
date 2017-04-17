@@ -1,7 +1,7 @@
 # szz
 SZZ is an algorithm to locate fix-inducing changes. Fix inducing-changes is a change that later gets undone by a fix.
 
-### Steeps in SZZ
+### Steps in the szz algorithm
   Supose that _r1_ is a revision to fix a bug, and _r2_ is a revision before _r1_.
   
   - Use a diff command between _r1_ and _r2_ to locating the lines _l_ touched by a bug.
