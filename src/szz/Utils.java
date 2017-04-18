@@ -6,54 +6,137 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Utils {
-	
-	//Escreve um conteúdo em um arquivo
-		public static void FileWrite(String fileName, String content) {
-			File file = new File(fileName);
 
-			try (FileOutputStream fop = new FileOutputStream(file)) {
-				if (!file.exists()) {
-					file.createNewFile();
-				}
+	// Escreve dado conteúdo em um arquivo
+	public static void FileWrite(String fileName, String content) {
+		File file = new File(fileName);
 
-				byte[] contentInBytes = content.getBytes();
-
-				fop.write(contentInBytes);
-				fop.flush();
-				fop.close();
-
-			} catch (IOException e) {
-				e.printStackTrace();
+		try (FileOutputStream fop = new FileOutputStream(file)) {
+			if (!file.exists()) {
+				file.createNewFile();
 			}
+
+			byte[] contentInBytes = content.getBytes();
+
+			fop.write(contentInBytes);
+			fop.flush();
+			fop.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	// Lê um arquivo e retorna todas as linhas em forma de lista
+	public static List<String> FileRead(String filePath) {
+		List<String> result = new ArrayList<String>();
+
+		try {
+			FileReader file = new FileReader(filePath);
+			BufferedReader reader = new BufferedReader(file);
+			String linha = reader.readLine();
+
+			while (linha != null) {
+				result.add(linha);
+				linha = reader.readLine();
+			}
+			file.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	/*// Retorna as linhas modificadas em um commit para um arquivo
+	public static Set<String> getModifiedLines(String id, String file, String repositoryPath) {
+		Set<String> modifiedLines = new LinkedHashSet<String>();
+
+		Utils.FileWrite("diff.txt", Utils.executeCommand("git show " + id +" -- "+file , repositoryPath));
+		List<String> diff = Utils.FileRead("diff.txt");
+		
+		for (String line : diff) {
+			if(line.length() > 0){
+				if((line.charAt(0) == '+') && !(line.charAt(1) == '+')){
+					modifiedLines.add(line.substring(1));
+				}else if((line.charAt(0) == '-') && !(line.charAt(1) == '-')){
+					modifiedLines.add(line.substring(1));
+				}
+			}
+		}
+		return modifiedLines;
+	}*/
+
+	
+	// Retorna as linhas modificadas em um commit para um arquivo
+	public static Set<String> getModifiedLines(String id, String file, String repositoryPath) {
+		Set<String> modifiedLines = new LinkedHashSet<String>();
+	
+		String command = "git show " + id +" -- "+ file;
+		String output = null;
+
+		try {
+			Process process = Runtime.getRuntime().exec(command, null, new File(repositoryPath));
+
+			BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+			while ((output = input.readLine()) != null) {
+
+				if(output.length() > 0){
+					if((output.charAt(0) == '+') && !(output.charAt(1) == '+')){
+						modifiedLines.add(output.substring(1));
+					}else if((output.charAt(0) == '-') && !(output.charAt(1) == '-')){
+						modifiedLines.add(output.substring(1));
+					}
+				}
+			}
+
+			input.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return modifiedLines;
 	}
 	
-	//Lê um arquivo e retorna todas as linhas em forma de lista
-		 public static List<String> FileRead(String filePath){
-			List<String> result = new ArrayList<String>();
-			  
-			try {
-				FileReader file = new FileReader(filePath);
-				BufferedReader reader = new BufferedReader(file);	
-				String linha = reader.readLine();	
-			
-				while(linha != null){
-					result.add(linha);
-					linha = reader.readLine();
-				}
-				file.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}  
-			  return result;
-	} 
+	
+	public static Set<String> getInsertionCommits(String id, String file,  Set<String> lines, String repositoryPath){
+		Set<String> insertionCommits = new HashSet<String>();
+		
+		String command = "git blame " + id +"^ -- "+ file;
+		String output = null;
 
-	private static Calendar getDateTime(String id, String repositoryPath) {
+		try {
+			Process process = Runtime.getRuntime().exec(command, null, new File(repositoryPath));
+
+			BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+			while ((output = input.readLine()) != null) {
+				for (String line : lines) {
+					if(output.contains(line)){
+						System.out.println(output);
+					}
+				}
+			}
+
+			input.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return insertionCommits;
+	}
+	
+	// Retorna a data de um commit
+	public static Calendar getDateTime(String id, String repositoryPath) {
 		String command = "git show " + id + " -s --date=iso --format=\"%cd\"";
 
 		String output = null;
@@ -112,4 +195,5 @@ public class Utils {
 		}
 		return results;
 	}
+	
 }
