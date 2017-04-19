@@ -93,8 +93,10 @@ public class Utils {
 
 				if(output.length() > 0){
 					if((output.charAt(0) == '+') && !(output.charAt(1) == '+')){
+						//System.out.println(output.substring(1));
 						modifiedLines.add(output.substring(1));
 					}else if((output.charAt(0) == '-') && !(output.charAt(1) == '-')){
+						//System.out.println(output.substring(1));
 						modifiedLines.add(output.substring(1));
 					}
 				}
@@ -108,13 +110,14 @@ public class Utils {
 	}
 	
 	
-	public static Set<String> getInsertionCommits(String id, String file,  Set<String> lines, String repositoryPath){
+	public static Set<String> getInsertionCommits(String idFix, String idReport, String file,  Set<String> lines, String repositoryPath){
 		Set<String> insertionCommits = new HashSet<String>();
 		
-		String command = "git blame " + id +"^ -- "+ file;
+		String command = "git blame " + idFix +"^ -- "+ file;
 		String output = null;
 
 		try {
+			Calendar dataReport = Utils.getDateTime(idReport, repositoryPath);
 			Process process = Runtime.getRuntime().exec(command, null, new File(repositoryPath));
 
 			BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -123,6 +126,11 @@ public class Utils {
 				for (String line : lines) {
 					if(output.contains(line)){
 						System.out.println(output);
+						Calendar dataCommit = Utils.getDateTime(output.split(" ")[0], repositoryPath);
+						
+						if(dataCommit.before(dataReport)){
+							insertionCommits.add(output.split(" ")[0]);
+						}
 					}
 				}
 			}
@@ -131,7 +139,7 @@ public class Utils {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+		System.out.println(insertionCommits.toString());
 		return insertionCommits;
 	}
 	
