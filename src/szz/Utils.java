@@ -57,31 +57,26 @@ public class Utils {
 		return result;
 	}
 
-	/*// Retorna as linhas modificadas em um commit para um arquivo
-	public static Set<String> getModifiedLines(String id, String file, String repositoryPath) {
-		Set<String> modifiedLines = new LinkedHashSet<String>();
+	/*
+	 * // Retorna as linhas modificadas em um commit para um arquivo public
+	 * static Set<String> getModifiedLines(String id, String file, String
+	 * repositoryPath) { Set<String> modifiedLines = new
+	 * LinkedHashSet<String>();
+	 * 
+	 * Utils.FileWrite("diff.txt", Utils.executeCommand("git show " + id +" -- "
+	 * +file , repositoryPath)); List<String> diff = Utils.FileRead("diff.txt");
+	 * 
+	 * for (String line : diff) { if(line.length() > 0){ if((line.charAt(0) ==
+	 * '+') && !(line.charAt(1) == '+')){ modifiedLines.add(line.substring(1));
+	 * }else if((line.charAt(0) == '-') && !(line.charAt(1) == '-')){
+	 * modifiedLines.add(line.substring(1)); } } } return modifiedLines; }
+	 */
 
-		Utils.FileWrite("diff.txt", Utils.executeCommand("git show " + id +" -- "+file , repositoryPath));
-		List<String> diff = Utils.FileRead("diff.txt");
-		
-		for (String line : diff) {
-			if(line.length() > 0){
-				if((line.charAt(0) == '+') && !(line.charAt(1) == '+')){
-					modifiedLines.add(line.substring(1));
-				}else if((line.charAt(0) == '-') && !(line.charAt(1) == '-')){
-					modifiedLines.add(line.substring(1));
-				}
-			}
-		}
-		return modifiedLines;
-	}*/
-
-	
 	// Retorna as linhas modificadas em um commit para um arquivo
 	public static Set<String> getModifiedLines(String id, String file, String repositoryPath) {
 		Set<String> modifiedLines = new LinkedHashSet<String>();
-	
-		String command = "git show " + id +" -- "+ file;
+
+		String command = "git show " + id + " -- " + file;
 		String output = null;
 
 		try {
@@ -91,12 +86,12 @@ public class Utils {
 
 			while ((output = input.readLine()) != null) {
 
-				if(output.length() > 0){
-					if((output.charAt(0) == '+') && !(output.charAt(1) == '+')){
-						//System.out.println(output.substring(1));
+				if (output.length() > 0) {
+					if ((output.charAt(0) == '+') && !(output.charAt(1) == '+')) {
+						// System.out.println(output.substring(1));
 						modifiedLines.add(output.substring(1));
-					}else if((output.charAt(0) == '-') && !(output.charAt(1) == '-')){
-						//System.out.println(output.substring(1));
+					} else if ((output.charAt(0) == '-') && !(output.charAt(1) == '-')) {
+						// System.out.println(output.substring(1));
 						modifiedLines.add(output.substring(1));
 					}
 				}
@@ -108,12 +103,12 @@ public class Utils {
 		}
 		return modifiedLines;
 	}
-	
-	
-	public static Set<String> getInsertionCommits(String idFix, String idReport, String file,  Set<String> lines, String repositoryPath){
+
+	public static Set<String> getInsertionCommits(String idFix, String idReport, String file, Set<String> lines,
+			String repositoryPath) {
 		Set<String> insertionCommits = new HashSet<String>();
-		
-		String command = "git blame " + idFix +"^ -- "+ file;
+
+		String command = "git annotate -l " + idFix + "^ -- " + file;
 		String output = null;
 
 		try {
@@ -124,12 +119,12 @@ public class Utils {
 
 			while ((output = input.readLine()) != null) {
 				for (String line : lines) {
-					if(output.contains(line)){
-						System.out.println(output);
-						Calendar dataCommit = Utils.getDateTime(output.split(" ")[0], repositoryPath);
-						
-						if(dataCommit.before(dataReport)){
-							insertionCommits.add(output.split(" ")[0]);
+					if (output.contains(line)) {
+						//System.out.println(output);
+						Calendar dataCommit = Utils.getDateTime(output.split("	")[0], repositoryPath);
+
+						if (dataCommit.before(dataReport)) {
+							insertionCommits.add(output.split("	")[0]);
 						}
 					}
 				}
@@ -142,10 +137,11 @@ public class Utils {
 		System.out.println(insertionCommits.toString());
 		return insertionCommits;
 	}
-	
+
 	// Retorna a data de um commit
 	public static Calendar getDateTime(String id, String repositoryPath) {
 		String command = "git show " + id + " -s --date=iso --format=\"%cd\"";
+		//System.out.println(command);
 
 		String output = null;
 
@@ -203,5 +199,49 @@ public class Utils {
 		}
 		return results;
 	}
-	
+
+	public static void executeScript(String scriptPath, String arguments) throws InterruptedException {
+		try {
+			ProcessBuilder pb = new ProcessBuilder(scriptPath, "This is ProcessBuilder Example from JCG");
+			System.out.println("Run echo command");
+			Process process = pb.start(); 
+			int errCode = process.waitFor();
+			System.out.println("Echo command executed, any errors? " + (errCode == 0 ? "No" : "Yes"));
+			System.out.println("Echo Output:\n" + output(process.getInputStream()));
+
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	private static String output(InputStream inputStream) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new InputStreamReader(inputStream));
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				sb.append(line + System.getProperty("line.separator"));
+			}
+		} finally {
+			br.close();
+		}
+		return sb.toString();
+	}
+
+	/*
+	 * public static List<String> executeCommand(String command){
+	 * ArrayList<String> results = new ArrayList<String>(); String output =
+	 * null;
+	 * 
+	 * try { Process process = Runtime.getRuntime().exec(command, null, null);
+	 * 
+	 * BufferedReader input = new BufferedReader(new
+	 * InputStreamReader(process.getInputStream()));
+	 * 
+	 * while ((output = input.readLine()) != null) { results.add(output); }
+	 * 
+	 * input.close(); } catch (Exception e) { e.printStackTrace(); } return
+	 * results; }
+	 */
 }
