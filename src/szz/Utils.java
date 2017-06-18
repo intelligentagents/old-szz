@@ -86,7 +86,7 @@ public class Utils {
 
 			while ((output = input.readLine()) != null) {
 
-				if (output.length() > 0) {
+				if (output.length() > 2) {
 					if ((output.charAt(0) == '+') && !(output.charAt(1) == '+')) {
 						// System.out.println(output.substring(1));
 						modifiedLines.add(output.substring(1));

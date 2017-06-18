@@ -11,8 +11,8 @@ public class Main {
 	public static String repositoryPath = "/Users/joaocorreia/tomcat/.git";
 	
 	public static void main(String[] args) {
-		Commit fix = new Commit("7b870a495d1d9fcf7bf6602f197ae3998ac6499c",  Utils.getDateTime("7b870a495d1d9fcf7bf6602f197ae3998ac6499c", repositoryPath));
-		Commit report = new Commit("4ebbc070f40de9c0789f7b136aa4bed7ab0b57e6", Utils.getDateTime("4ebbc070f40de9c0789f7b136aa4bed7ab0b57e6", repositoryPath));
+		Commit fix = new Commit("1516a4fbb13d87130a41cba2e738939cf74c2130",  Utils.getDateTime("1516a4fbb13d87130a41cba2e738939cf74c2130", repositoryPath));
+		Commit report = new Commit("b8e93369cae6035bc97a0e168e92e9c34bcab3e1", Utils.getDateTime("b8e93369cae6035bc97a0e168e92e9c34bcab3e1", repositoryPath));
 		Bug bug = new Bug(1, fix, report);
 		
 		//System.out.println(fix.getDateTime().getTime());
@@ -22,7 +22,6 @@ public class Main {
 	
 		Set<String> lines = null;
 		for (String file : files) {
-			//System.out.println(file);
 			lines = Utils.getModifiedLines(fix.getId(), file, repositoryPath);
 			//System.out.println(lines.toString());
 			Utils.getInsertionCommits(fix.getId(),report.getId(), file, lines, repositoryPath);
