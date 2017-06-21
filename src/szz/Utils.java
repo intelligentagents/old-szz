@@ -200,48 +200,4 @@ public class Utils {
 		return results;
 	}
 
-	public static void executeScript(String scriptPath, String arguments) throws InterruptedException {
-		try {
-			ProcessBuilder pb = new ProcessBuilder(scriptPath, "This is ProcessBuilder Example from JCG");
-			System.out.println("Run echo command");
-			Process process = pb.start(); 
-			int errCode = process.waitFor();
-			System.out.println("Echo command executed, any errors? " + (errCode == 0 ? "No" : "Yes"));
-			System.out.println("Echo Output:\n" + output(process.getInputStream()));
-
-		} catch (IOException e) {
-			System.out.println(e.getMessage());
-		}
-	}
-
-	private static String output(InputStream inputStream) throws IOException {
-		StringBuilder sb = new StringBuilder();
-		BufferedReader br = null;
-		try {
-			br = new BufferedReader(new InputStreamReader(inputStream));
-			String line = null;
-			while ((line = br.readLine()) != null) {
-				sb.append(line + System.getProperty("line.separator"));
-			}
-		} finally {
-			br.close();
-		}
-		return sb.toString();
-	}
-
-	/*
-	 * public static List<String> executeCommand(String command){
-	 * ArrayList<String> results = new ArrayList<String>(); String output =
-	 * null;
-	 * 
-	 * try { Process process = Runtime.getRuntime().exec(command, null, null);
-	 * 
-	 * BufferedReader input = new BufferedReader(new
-	 * InputStreamReader(process.getInputStream()));
-	 * 
-	 * while ((output = input.readLine()) != null) { results.add(output); }
-	 * 
-	 * input.close(); } catch (Exception e) { e.printStackTrace(); } return
-	 * results; }
-	 */
 }
