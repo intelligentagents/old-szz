@@ -1,4 +1,4 @@
-package szz;
+package control;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -57,21 +57,6 @@ public class Utils {
 		return result;
 	}
 
-	/*
-	 * // Retorna as linhas modificadas em um commit para um arquivo public
-	 * static Set<String> getModifiedLines(String id, String file, String
-	 * repositoryPath) { Set<String> modifiedLines = new
-	 * LinkedHashSet<String>();
-	 * 
-	 * Utils.FileWrite("diff.txt", Utils.executeCommand("git show " + id +" -- "
-	 * +file , repositoryPath)); List<String> diff = Utils.FileRead("diff.txt");
-	 * 
-	 * for (String line : diff) { if(line.length() > 0){ if((line.charAt(0) ==
-	 * '+') && !(line.charAt(1) == '+')){ modifiedLines.add(line.substring(1));
-	 * }else if((line.charAt(0) == '-') && !(line.charAt(1) == '-')){
-	 * modifiedLines.add(line.substring(1)); } } } return modifiedLines; }
-	 */
-
 	// Retorna as linhas modificadas em um commit para um arquivo
 	public static Set<String> getModifiedLines(String id, String file, String repositoryPath) {
 		Set<String> modifiedLines = new LinkedHashSet<String>();
@@ -103,7 +88,8 @@ public class Utils {
 		}
 		return modifiedLines;
 	}
-
+	
+	//Recupera os commits responsáveis por inserir linhas modificadas durante a correção de um bug
 	public static Set<String> getInsertionCommits(String idFix, String idReport, String file, Set<String> lines,
 			String repositoryPath) {
 		Set<String> insertionCommits = new HashSet<String>();
