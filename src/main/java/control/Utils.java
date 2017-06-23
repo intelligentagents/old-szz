@@ -1,12 +1,12 @@
 package control;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -14,6 +14,11 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.PumpStreamHandler;
 
 public class Utils {
 
@@ -185,5 +190,36 @@ public class Utils {
 		}
 		return results;
 	}
+	
+	private static String executeCommand(final String command, final String... arguments) {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream);
+		CommandLine commandLine = CommandLine.parse(command);
+		if (arguments != null) {
+			commandLine.addArguments(arguments);
+		}
+		DefaultExecutor defaultExecutor = new DefaultExecutor();
+		defaultExecutor.setExitValue(0);
+		try {
+			defaultExecutor.setStreamHandler(streamHandler);
+			defaultExecutor.execute(commandLine);
+		} catch (ExecuteException e) {
+			System.err.println("Execution failed.");
+		    e.printStackTrace();
+		} catch (IOException e) {
+			System.err.println("permission denied.");
+			e.printStackTrace();
+		}
 
+		return outputStream.toString().replaceAll("\n", "");
+	}
+
+	public static String retrievePreviousCommit(final String commit, final String repositoryPath) {
+		
+		final String lastCommit = executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "rev-parse", "HEAD");
+		executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "checkout", commit);
+		final String previousCommit = executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "rev-parse", "HEAD~1");
+		executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "checkout", lastCommit);
+		return previousCommit;
+	}
 }

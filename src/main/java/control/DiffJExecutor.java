@@ -59,7 +59,7 @@ public class DiffJExecutor {
 	
 	// Exemplo
 	public static void main(String args[]) {
-		DiffJExecutor executor = new DiffJExecutor("/Users/joaocorreia/diffj/build/scripts/diffj", "/Users/joaocorreia/diffj/build/scripts/Unchanged.java", "/Users/joaocorreia/diffj/build/scripts/Changed.java" );
+		DiffJExecutor executor = new DiffJExecutor("/Users/bonoddr/Development/Workspace/doutorado/diffj/build/scripts/diffj", "/Users/joaocorreia/diffj/build/scripts/Unchanged.java", "/Users/joaocorreia/diffj/build/scripts/Changed.java" );
 		List<String> result = executor.run();
 		
 		for (String string : result) {
