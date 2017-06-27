@@ -1,18 +1,22 @@
 package control;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.exec.CommandLine;
@@ -208,15 +212,68 @@ public class Utils {
 			e.printStackTrace();
 		}
 
-		return outputStream.toString().replaceAll("\n", "");
+		return outputStream.toString();
 	}
 
 	public static String retrievePreviousCommit(final String commit, final String repositoryPath) {
 		
-		final String lastCommit = executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "rev-parse", "HEAD");
+		final String lastCommit = executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "rev-parse", "HEAD").replaceAll("\n", "");
 		executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "checkout", commit);
-		final String previousCommit = executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "rev-parse", "HEAD~1");
+		final String previousCommit = executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "rev-parse", "HEAD~1").replaceAll("\n", "");
 		executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "checkout", lastCommit);
 		return previousCommit;
+	}
+	
+	private static String retrieveFileContentFromCommit(final String commit, final String file, final String repositoryPath) {
+		final String lastCommit = executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "rev-parse", "HEAD").replaceAll("\n", "");
+		executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "checkout", commit);
+		StringBuilder fileContentBuilder = new StringBuilder();
+		try (BufferedReader br = new BufferedReader(new FileReader(repositoryPath + file))) {
+			String lineContent = null;
+			while ((lineContent = br.readLine()) != null) {
+				fileContentBuilder.append(lineContent);
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		} 
+		
+		executeCommand("git", "--work-tree=" + repositoryPath, "--git-dir=" + repositoryPath + ".git", "checkout", lastCommit).replaceAll("\n", "");
+		
+		return fileContentBuilder.toString();
+	}
+	
+	public static Map<String, String> retrieveTempFilesToDiff(final String commit, final String file, final String repositoryPath) {
+		
+		String fixFileContent = null;
+		String previousFileContent = null;
+		
+			fixFileContent = retrieveFileContentFromCommit(commit, file, repositoryPath);
+			final String previousCommitHash = retrievePreviousCommit(commit, repositoryPath);
+			previousFileContent = retrieveFileContentFromCommit(previousCommitHash, file, repositoryPath);
+		
+		Map<String, String> tempFilesPath = new HashMap<String, String>();
+		
+		if ("".equals(fixFileContent.trim())  || "".equals(previousFileContent.trim())) {
+			return tempFilesPath;
+		}
+		
+		try {
+			File fixTempFile = File.createTempFile(file.substring(file.lastIndexOf("/") + 1, file.lastIndexOf(".")), ".java");
+			BufferedWriter bw = new BufferedWriter(new FileWriter(fixTempFile));
+    	    bw.write(fixFileContent);
+    	    bw.close();
+			File previousTempFile = File.createTempFile(file.substring(file.lastIndexOf("/") + 1, file.lastIndexOf(".")), ".java");
+			bw = new BufferedWriter(new FileWriter(previousTempFile));
+    	    bw.write(previousFileContent);
+    	    bw.close();
+    	    
+    	    tempFilesPath.put(previousTempFile.getAbsolutePath(), fixTempFile.getAbsolutePath());
+    	    
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return tempFilesPath;
 	}
 }
