@@ -2,7 +2,6 @@ package model;
 
 public class Bug {
 	private int id;
-
 	private Commit report;
 	private Commit fix;
 	

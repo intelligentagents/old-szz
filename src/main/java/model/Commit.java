@@ -1,15 +1,20 @@
 package model;
 
 import java.util.Calendar;
+import java.util.List;
+
+import control.Utils;
 
 public class Commit{
 	private String id;
 	private Calendar date;
+	private List<ChangedFile> changedFiles;
 	
-	public Commit(String id, Calendar date) {
+	public Commit(String id, String repositoryPath) {
 		super();
 		this.id = id;
-		this.date = date;
+		date = Utils.getDateTime(id, repositoryPath);
+		changedFiles = Utils.getChangedFiles(id, repositoryPath);
 	}
 	
 	public String getId() {
@@ -23,6 +28,14 @@ public class Commit{
 	}
 	public void setDate(Calendar date) {
 		this.date = date;
+	}
+
+	public List<ChangedFile> getChangedFiles() {
+		return changedFiles;
+	}
+
+	public void setChangedFiles(List<ChangedFile> changedFiles) {
+		this.changedFiles = changedFiles;
 	}
 	
 	

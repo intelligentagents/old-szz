@@ -26,7 +26,7 @@ public class DiffJExecutor {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream);
 
-		String command = "sh "+scriptPath+" "+fileBefore+" "+fileAfter;
+		String command = "sh "+scriptPath+" --source 1.6 "+fileBefore+" "+fileAfter;
 		
 		CommandLine commandLine = CommandLine.parse(command);
 		DefaultExecutor defaultExecutor = new DefaultExecutor();
@@ -41,7 +41,7 @@ public class DiffJExecutor {
 			System.err.println("permission denied.");
 			e.printStackTrace();
 		}
-
+		
 		return stringToList(outputStream.toString());
 	}
 	
@@ -59,7 +59,7 @@ public class DiffJExecutor {
 	
 	// Exemplo
 	public static void main(String args[]) {
-		DiffJExecutor executor = new DiffJExecutor("/Users/bonoddr/Development/Workspace/doutorado/diffj/build/scripts/diffj", "/Users/joaocorreia/diffj/build/scripts/Unchanged.java", "/Users/joaocorreia/diffj/build/scripts/Changed.java" );
+		DiffJExecutor executor = new DiffJExecutor("/Users/joaocorreia/diffj/build/scripts/diffj", "/Users/joaocorreia/diffj/build/scripts/AbstractCatalinaTask.java", "/Users/joaocorreia/diffj/build/scripts/AbstractCatalinaTask2.java" );
 		List<String> result = executor.run();
 		
 		for (String string : result) {

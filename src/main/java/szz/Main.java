@@ -1,36 +1,33 @@
 package szz;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import model.Commit;
+import model.ChangedFile;
 import control.Utils;
 
 public class Main {
 
-	public static String repositoryPath = "/Users/joaocorreia/tomcat/.git";
+	public static String repositoryPath = "/Users/joaocorreia/tomcat/";
 	
 	public static void main(String[] args) {
-		Commit fix = new Commit("1516a4fbb13d87130a41cba2e738939cf74c2130",  Utils.getDateTime("1516a4fbb13d87130a41cba2e738939cf74c2130", repositoryPath));
-		Commit report = new Commit("b8e93369cae6035bc97a0e168e92e9c34bcab3e1", Utils.getDateTime("b8e93369cae6035bc97a0e168e92e9c34bcab3e1", repositoryPath));
-		//Bug bug = new Bug(1, fix, report);
 		
-		//System.out.println(fix.getDateTime().getTime());
-		//System.out.println(report.getDateTime().getTime());
+		Commit fix = new Commit("1ad05014b573861b4af501cfe13cb7ef00bc98dc", repositoryPath);
+		Commit report = new Commit("93dc4a710cc7da1731da45ded503e90c82c84c7e", repositoryPath);
 		
-		List<String> files = Utils.getChangedFiles(fix.getId(), repositoryPath);
-	
-		Set<String> lines = null;
-		for (String file : files) {
-			lines = Utils.getModifiedLines(fix.getId(), file, repositoryPath);
-			//System.out.println(lines.toString());
-			Utils.getInsertionCommits(fix.getId(),report.getId(), file, lines, repositoryPath);
-		}
 		
-		/*System.out.println(fix.getDateTime().getTime());
-		System.out.println(report.getDateTime().getTime());
-		System.out.println(files.toString());*/
+		Set<String> insertionCommits = new HashSet<String>();
 		
+		List<ChangedFile> changedFiles = fix.getChangedFiles();
+		for (ChangedFile file : changedFiles) {
+			
+			file.setBugIntroductionCandidate(Utils.getBugIntroductionCandidates(fix.getId(), file.getPath(), repositoryPath));
+			insertionCommits.addAll(Utils.getInsertionCommits(fix.getId(), report.getId(), file, repositoryPath));
+			
+		}	
+		System.out.println(insertionCommits);
 		
 	}
 
