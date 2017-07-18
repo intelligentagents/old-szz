@@ -1,6 +1,4 @@
-/**
- * 
- */
+
 package control;
 
 import java.util.Collections;

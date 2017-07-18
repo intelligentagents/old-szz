@@ -82,9 +82,8 @@ public class Utils {
 				filesToDiff.keySet().iterator().next(), filesToDiff.values().iterator().next());
 
 		List<String> diff = executor.run();
-
+		
 		for (String diffLine : diff) {
-
 			if (diffLine.length() > 2) {
 				List<Integer> interval = getLinesInterval(diffLine);
 
@@ -145,7 +144,6 @@ public class Utils {
 			}
 
 		} else if (mTwo.find()) {
-			System.out.println(line);
 			try {
 				String[] token = line.replace(" ", "").split("[a-z]")[0].split(",");
 				lineFrom = Integer.parseInt(token[0]);
@@ -155,7 +153,6 @@ public class Utils {
 				e.printStackTrace();
 			}
 		} else if (mThree.find()) {
-			System.out.println(line);
 			try {
 				String[] token = line.replace(" ", "").split("[a-z]");
 				lineFrom = Integer.parseInt(token[0]);
@@ -165,7 +162,6 @@ public class Utils {
 				e.printStackTrace();
 			}
 		} else if (mFour.find()) {
-			System.out.println(line);
 			try {
 				String[] token = line.replace(" ", "").split("[a-z]")[0].split(",");
 				lineFrom = Integer.parseInt(token[0]);
@@ -200,25 +196,23 @@ public class Utils {
 			while ((output = input.readLine()) != null) {
 				annotateResult.add(output);
 			}
-
-			for (BugIntroductionCandidate candidate : file.getBugIntroductionCandidate()) {
-
-				for (int i = candidate.getLineFrom() - 1; i <= candidate.getLineTo() - 1; i++) {
-
-					for (String line : candidate.getLineContent()) {
-						if (annotateResult.get(i).contains(line)) {
-							Calendar dataCommit = Utils.getDateTime(annotateResult.get(i).split("	")[0],
-									repositoryPath);
-
-							if (dataCommit.before(dataReport)) {
-								insertionCommits.add(annotateResult.get(i).split("	")[0]);
+				for (BugIntroductionCandidate candidate : file.getBugIntroductionCandidate()) {
+	
+					for (int i = candidate.getLineFrom() - 1; i <= candidate.getLineTo() - 1; i++) {
+	
+						for (String line : candidate.getLineContent()) {
+							if (annotateResult.get(i).contains(line)) {
+								Calendar dataCommit = Utils.getDateTime(annotateResult.get(i).split("	")[0],
+										repositoryPath);
+	
+								if (dataCommit.before(dataReport)) {
+									insertionCommits.add(annotateResult.get(i).split("	")[0]);
+								}
 							}
 						}
 					}
+	
 				}
-
-			}
-
 			input.close();
 		} catch (Exception e) {
 			e.printStackTrace();
