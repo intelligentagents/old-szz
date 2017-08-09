@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -76,34 +77,46 @@ public class Utils {
 		List<BugIntroductionCandidate> candidates = new ArrayList<BugIntroductionCandidate>();
 		BugIntroductionCandidate candidate = null;
 
-		Map<String, String> filesToDiff = retrieveTempFilesToDiff(id, filePath, repositoryPath);
+		try {
+			Map<String, String> filesToDiff = retrieveTempFilesToDiff(id, filePath, repositoryPath);
 
-		DiffJExecutor executor = new DiffJExecutor("/Users/joaocorreia/diffj/build/scripts/diffj",
-				filesToDiff.keySet().iterator().next(), filesToDiff.values().iterator().next());
+			if(filesToDiff == null){
+				return null;
+			}
 
-		List<String> diff = executor.run();
-		
-		for (String diffLine : diff) {
-			if (diffLine.length() > 2) {
-				List<Integer> interval = getLinesInterval(diffLine);
+			DiffJExecutor executor = new DiffJExecutor("/Users/joaocorreia/diffj/build/scripts/diffj",
+					filesToDiff.keySet().iterator().next(), filesToDiff.values().iterator().next());
 
-				if (interval.get(0) != -1) {
+			List<String> diff = executor.run();
 
-					if (candidate != null)
-						candidates.add(candidate);
+			for (String diffLine : diff) {
+				//System.out.println(diffLine);
+				if (diffLine.length() > 2) {
+					List<Integer> interval = getLinesInterval(diffLine);
 
-					candidate = new BugIntroductionCandidate();
-					candidate.setLineContent(new ArrayList<>());
-					candidate.setLineFrom(interval.get(0));
-					candidate.setLineTo(interval.get(1));
-				} else {
-					if ((diffLine.charAt(0) == '<')) {
-						candidate.addLineContent(diffLine.substring(2));
+					if (interval.get(0) != -1) {
+
+						if (candidate != null)
+							candidates.add(candidate);
+
+						candidate = new BugIntroductionCandidate();
+						candidate.setLineContent(new ArrayList<>());
+						candidate.setLineFrom(interval.get(0));
+						candidate.setLineTo(interval.get(1));
+					} else {
+						if ((diffLine.charAt(0) == '<')) {
+							candidate.addLineContent(diffLine.substring(2));
+						}
 					}
 				}
 			}
+			candidates.add(candidate);
+
+		}catch (FileNotFoundException e){
+			return candidates;
+		}catch (IllegalArgumentException e){
+			return candidates;
 		}
-		candidates.add(candidate);
 
 		return candidates;
 	}
@@ -207,6 +220,9 @@ public class Utils {
 	
 								if (dataCommit.before(dataReport)) {
 									insertionCommits.add(annotateResult.get(i).split("	")[0]);
+								}else{
+
+									System.out.println("The candidate doesn't came after report: "+annotateResult.get(i).split("	")[0]);
 								}
 							}
 						}
@@ -214,7 +230,11 @@ public class Utils {
 	
 				}
 			input.close();
-		} catch (Exception e) {
+
+		} catch (NullPointerException e) {
+			System.err.println("The change isn't a Java code");
+			return insertionCommits;
+		} catch (Exception e){
 			e.printStackTrace();
 		}
 
@@ -321,7 +341,7 @@ public class Utils {
 	}
 
 	private static String retrieveFileContentFromCommit(final String commit, final String file,
-			final String repositoryPath) {
+			final String repositoryPath) throws FileNotFoundException {
 
 		final String lastCommit = executeCommand("git", "--work-tree=" + repositoryPath,
 				"--git-dir=" + repositoryPath + ".git", "rev-parse", "HEAD");
@@ -334,6 +354,8 @@ public class Utils {
 			while ((lineContent = br.readLine()) != null) {
 				fileContentBuilder.append(lineContent + "\n");
 			}
+		} catch (FileNotFoundException e) {
+			throw new FileNotFoundException();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -344,15 +366,19 @@ public class Utils {
 	}
 
 	public static Map<String, String> retrieveTempFilesToDiff(final String commit, final String file,
-			final String repositoryPath) {
+			final String repositoryPath) throws FileNotFoundException, IllegalArgumentException {
 
 		String fixFileContent = null;
 		String previousFileContent = null;
-
-		fixFileContent = retrieveFileContentFromCommit(commit, file, repositoryPath);
-		final String previousCommitHash = retrievePreviousCommit(commit, repositoryPath);
-		previousFileContent = retrieveFileContentFromCommit(previousCommitHash, file, repositoryPath);
-
+		
+		try {
+			fixFileContent = retrieveFileContentFromCommit(commit, file, repositoryPath);
+			final String previousCommitHash = retrievePreviousCommit(commit, repositoryPath);
+			previousFileContent = retrieveFileContentFromCommit(previousCommitHash, file, repositoryPath);
+		} catch (FileNotFoundException e) {
+			throw new FileNotFoundException();
+		}
+		
 		Map<String, String> tempFilesPath = new HashMap<String, String>();
 
 		if ("".equals(fixFileContent.trim()) || "".equals(previousFileContent.trim())) {
@@ -375,6 +401,9 @@ public class Utils {
 
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch (IllegalArgumentException e){
+			System.err.println("The file name is too short");
+			throw new IllegalArgumentException();
 		}
 
 		return tempFilesPath;

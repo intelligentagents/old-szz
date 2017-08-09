@@ -15,13 +15,17 @@ public class Main {
 		int total = 0, max = 0, min = 10000;
 		String result = "";
 		
-		List<String> bugs = Utils.FileRead("bugs.in");
+		List<String> bugs = Utils.FileRead("bugid_commitReport_commitFix.csv");
 		
 		for (String bug : bugs) {
-			String[] token = bug.replace(" ", "").split(",");
+			String[] token = bug.replace(" ", "").split(";");
+
 			String bugId = token[0];
-			String commitFix = token[1];
-			String commitReport = token[2];
+			String commitReport = token[1];
+			bugId = token[2];
+			String commitFix = token[3];
+
+			System.out.println("Analyzing: "+commitFix);
 
 			Commit fix = new Commit(commitFix, repositoryPath);
 			Commit report = new Commit(commitReport, repositoryPath);
@@ -29,7 +33,7 @@ public class Main {
 			Set<String> insertionCommits = new HashSet<String>();	
 			List<ChangedFile> changedFiles = fix.getChangedFiles();
 			for (ChangedFile file : changedFiles) {
-				//System.out.println(file.getPath());
+				System.out.println(file.getPath());
 				file.setBugIntroductionCandidate(Utils.getBugIntroductionCandidates(fix.getId(), file.getPath(), repositoryPath));
 				insertionCommits.addAll(Utils.getInsertionCommits(fix.getId(), report.getId(), file, repositoryPath));
 				
@@ -42,15 +46,15 @@ public class Main {
 			
 			total += insertionCommits.size();
 			
-			System.out.println(bugId+","+commitFix+","+commitReport+","+insertionCommits.toString()+","+insertionCommits.size()+"\n");
-			result += bugId+","+commitFix+","+commitReport+","+insertionCommits.toString()+","+insertionCommits.size()+"\n";
+			System.out.println(bugId+","+commitFix+","+commitReport+",{"+insertionCommits.toString()+"}\n");
+			result += bugId+","+commitFix+","+commitReport+",{"+insertionCommits.toString()+"}\n";
 		}
 		
-		result += "Total: "+ total;
-		result += "Min: "+ min;
-		result += "Max: "+ max;
+		result += "Total: "+ total + "\n";
+		result += "Min: "+ min + "\n";
+		result += "Max: "+ max + "\n";
 		
-		Utils.FileWrite("BugInsertionTomcat.txt", result);
+		Utils.FileWrite("BugInsertionTomcatIsabella.txt", result);
 		
 	}
 
