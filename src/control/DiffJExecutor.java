@@ -26,7 +26,7 @@ public class DiffJExecutor {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream);
 
-		String command = "sh "+scriptPath+" --source 1.8 "+fileBefore+" "+fileAfter;
+		String command = "bash "+scriptPath+" --source 1.8 "+fileBefore+" "+fileAfter;
 		
 		CommandLine commandLine = CommandLine.parse(command);
 		DefaultExecutor defaultExecutor = new DefaultExecutor();

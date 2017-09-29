@@ -1,15 +1,6 @@
 package control;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -21,6 +12,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import model.Bug;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
@@ -30,6 +24,26 @@ import model.BugIntroductionCandidate;
 import model.ChangedFile;
 
 public class Utils {
+		public static List<String> getAllJsonFiles(final File folder){
+			List<String> files = new ArrayList<String>();
+
+			for (final File fileEntry : folder.listFiles()) {
+				if (fileEntry.isDirectory()) {
+					getAllJsonFiles(fileEntry);
+				} else {
+					if(fileEntry.getAbsolutePath().toString().substring(fileEntry.getAbsolutePath().toString().lastIndexOf("." )+1).equals("json"))
+						files.add(fileEntry.getName());
+				}
+			}
+			return files;
+		}
+
+		public static Bug readJson(String file) throws FileNotFoundException {
+			Reader reader = new FileReader(file);
+			Gson gson = new Gson();
+			Bug bug = gson.fromJson(reader, Bug.class);
+			return bug;
+		}
 
 	// Escreve dado conteúdo em um arquivo
 	public static void FileWrite(String fileName, String content) {
@@ -84,7 +98,7 @@ public class Utils {
 				return null;
 			}
 
-			DiffJExecutor executor = new DiffJExecutor("/Users/joaocorreia/diffj/build/scripts/diffj",
+			DiffJExecutor executor = new DiffJExecutor("/home/easy/diffj/build/scripts/diffj",
 					filesToDiff.keySet().iterator().next(), filesToDiff.values().iterator().next());
 
 			List<String> diff = executor.run();
@@ -193,7 +207,7 @@ public class Utils {
 	// Recupera os commits responsáveis por inserir linhas modificadas durante a
 	// correção de um bug
 	public static Set<String> getInsertionCommits(String idFix, String idReport, ChangedFile file,
-			String repositoryPath) {
+												  String repositoryPath) {
 		Set<String> insertionCommits = new HashSet<String>();
 		List<String> annotateResult = new ArrayList<String>();
 
@@ -209,26 +223,38 @@ public class Utils {
 			while ((output = input.readLine()) != null) {
 				annotateResult.add(output);
 			}
-				for (BugIntroductionCandidate candidate : file.getBugIntroductionCandidate()) {
-	
-					for (int i = candidate.getLineFrom() - 1; i <= candidate.getLineTo() - 1; i++) {
-	
-						for (String line : candidate.getLineContent()) {
-							if (annotateResult.get(i).contains(line)) {
-								Calendar dataCommit = Utils.getDateTime(annotateResult.get(i).split("	")[0],
-										repositoryPath);
-	
-								if (dataCommit.before(dataReport)) {
-									insertionCommits.add(annotateResult.get(i).split("	")[0]);
-								}else{
+			for (BugIntroductionCandidate candidate : file.getBugIntroductionCandidate()) {
 
-									System.out.println("The candidate doesn't came after report: "+annotateResult.get(i).split("	")[0]);
+				for (int i = candidate.getLineFrom() - 1; i <= candidate.getLineTo() - 1; i++) {
+
+					for (String line : candidate.getLineContent()) {
+						if (annotateResult.get(i).contains(line)) {
+							String introduceCommit = annotateResult.get(i).split("\t")[0];
+							//Eliminacao manual
+////							if(introduceCommit.equals("eac036999fab0e9f9509022d833a1c99cad1b415") || introduceCommit.equals("70f769236e733023a3a5d87c225f93212ff0c3f7")){
+////								String introduceCommitBefore = insertionCommitBefore(introduceCommit,file.getPath(), line, repositoryPath);
+////								Calendar dataCommit = Utils.getDateTime(introduceCommitBefore.split("\t")[0], repositoryPath);
+////
+////								if (dataCommit.before(dataReport)) {
+////									insertionCommits.add(introduceCommitBefore.split("\t")[0]);
+////								} else {
+////									System.out.println("The candidate doesn't came after report: " + introduceCommitBefore.split("\t")[0]);
+////								}
+////
+////							}else {
+
+								Calendar dataCommit = Utils.getDateTime(annotateResult.get(i).split("\t")[0], repositoryPath);
+								if (dataCommit.before(dataReport)) {
+									insertionCommits.add(annotateResult.get(i).split("\t")[0]);
+								} else {
+									System.out.println("The candidate doesn't came after report: " + annotateResult.get(i).split("\t")[0]);
 								}
-							}
+//							}
 						}
 					}
-	
 				}
+
+			}
 			input.close();
 
 		} catch (NullPointerException e) {
@@ -240,6 +266,35 @@ public class Utils {
 
 		return insertionCommits;
 	}
+
+	//Eliminação manual
+	public static String insertionCommitBefore(String commit, String file, String line, String repositoryPath){
+		List<String> annotateResult = new ArrayList<String>();
+		String result = "";
+
+		String command = "git annotate -l " + commit + "^ -- " + file;
+		String output = null;
+
+		try {
+			Process process = Runtime.getRuntime().exec(command, null, new File(repositoryPath));
+			BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+			while ((output = input.readLine()) != null) {
+				annotateResult.add(output);
+			}
+
+			for (String lineFile: annotateResult) {
+				if (lineFile.contains(line)){
+					result = lineFile;
+				}
+			}
+
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+		return result;
+	}
+
 
 	// Retorna a data de um commit
 	public static Calendar getDateTime(String id, String repositoryPath) {
@@ -280,6 +335,7 @@ public class Utils {
 	public static List<ChangedFile> getChangedFiles(String commit, String repository) {
 		List<ChangedFile> fileRelatedToBug = new ArrayList<ChangedFile>();
 		String command = "git diff-tree --no-commit-id --name-only -r " + commit;
+		//String command = "git log -m -1 --name-only --pretty=\"format:\" " + commit;
 		String output = null;
 
 		try {
