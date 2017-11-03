@@ -12,17 +12,17 @@ import control.Utils;
 
 public class Main {
 
-	public static String repositoryPath = "/home/easy/okhttp/";
+	public static String repositoryPath = "/home/easy/elasticsearch/";
 	public static void main(String[] args) throws FileNotFoundException {
 		int total = 0, max = 0, min = 10000;
 		String result = "";
 
-		final File folder = new File("/home/easy/Okhttp");
+		final File folder = new File("/home/easy/Elasticsearch");
 		List<String> files = Utils.getAllJsonFiles(folder);
 		System.out.println(files.toString());
 
 		for (String json : files) {
-			Bug bug = Utils.readJson("/home/easy/Okhttp/" + json);
+			Bug bug = Utils.readJson("/home/easy/Elasticsearch/" + json);
 
 			ArrayList<CommitFix> fixes = bug.getCommitFix();
 
@@ -51,7 +51,7 @@ public class Main {
 
 				total += insertionCommits.size();
 
-				System.out.println(json + "," + fixForSzz.getId() + "," + reportForSzz.getId() + ",{" + insertionCommits.toString() + "}\n");
+				System.out.println(json + "," + fixForSzz.getId() + "," + reportForSzz.getId() + "," + insertionCommits.toString() + "\n");
 				result += json + "," + fixForSzz.getId() + "," + reportForSzz.getId() + ",\"" + insertionCommits.toString() + "\"\n";
 			}
 
@@ -61,7 +61,7 @@ public class Main {
 			result += "Min: " + min + "\n";
 			result += "Max: " + max + "\n";
 
-			Utils.FileWrite("resultOkhttp.csv", result);
+			Utils.FileWrite("resultElastic.csv", result);
 
 
 //		for (String bug : bugs) {

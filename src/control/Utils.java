@@ -120,6 +120,7 @@ public class Utils {
 					} else {
 						if ((diffLine.charAt(0) == '<')) {
 							candidate.addLineContent(diffLine.substring(2));
+							//System.out.println(diffLine);
 						}
 					}
 				}
@@ -213,6 +214,7 @@ public class Utils {
 
 		String command = "git annotate -l " + idFix + "^ -- " + file.getPath();
 		String output = null;
+
 
 		try {
 			Calendar dataReport = Utils.getDateTime(idReport, repositoryPath);
@@ -334,7 +336,7 @@ public class Utils {
 	// Retorna uma lista com os arquivos modificados em um commit
 	public static List<ChangedFile> getChangedFiles(String commit, String repository) {
 		List<ChangedFile> fileRelatedToBug = new ArrayList<ChangedFile>();
-		String command = "git diff-tree --no-commit-id --name-only -r " + commit;
+		String command = "git diff --name-only " + commit +" "+commit+"^";
 		//String command = "git log -m -1 --name-only --pretty=\"format:\" " + commit;
 		String output = null;
 
